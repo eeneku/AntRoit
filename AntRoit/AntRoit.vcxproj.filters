@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="res">
+      <UniqueIdentifier>fdbd7e27-03d4-47de-bf88-23763e536c39</UniqueIdentifier>
+    </Filter>
+    <Filter Include="res\values">
+      <UniqueIdentifier>f13d5630-3d25-49cd-811f-e5650c6214ff</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{13777eeb-964d-41ac-8a31-de4a6851fd02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\fi">
+      <UniqueIdentifier>{c225251b-f402-4ac6-a5a4-3a9f10338280}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\fi\enko">
+      <UniqueIdentifier>{3090c235-59f6-4791-837a-9fd497be3fbd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="jni">
+      <UniqueIdentifier>{c75f9ed3-6e4f-4544-8532-60184483dfdb}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidBuild Include="AndroidManifest.xml" />
+    <AndroidBuild Include="res\values\strings.xml">
+      <Filter>res\values</Filter>
+    </AndroidBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <JCompile Include="src\fi\enko\AntRoit.java">
+      <Filter>src\fi\enko</Filter>
+    </JCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="jni\AntRoit.cpp">
+      <Filter>jni</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
