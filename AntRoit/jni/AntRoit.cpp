@@ -8,8 +8,10 @@
 @param thiz Reference to Java this object
 */
 extern "C"
-JNIEXPORT void JNICALL
-Java_fi_enko_AntRoit_antroitNative( JNIEnv* env, jobject thiz )
 {
-	// Enter code here
+	JNIEXPORT void JNICALL
+	Java_fi_enko_AntRoit_antroitNative(JNIEnv* env, jobject thiz)
+	{
+		// Enter code here
+	}
 }
