@@ -19,6 +19,9 @@
     <Filter Include="jni">
       <UniqueIdentifier>{c75f9ed3-6e4f-4544-8532-60184483dfdb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="jni\Box2D">
+      <UniqueIdentifier>{c3c1dead-8e9f-4396-8f99-17db2883cac4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <AndroidBuild Include="AndroidManifest.xml" />
@@ -28,6 +31,147 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="jni\AntRoit.cpp">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\b2WorldCallbacks.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Common\b2BlockAllocator.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\b2Body.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Collision\b2BroadPhase.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Contacts\b2ChainAndCircleContact.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Contacts\b2ChainAndPolygonContact.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Collision\Shapes\b2ChainShape.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Contacts\b2CircleContact.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Collision\Shapes\b2CircleShape.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Collision\b2CollideCircle.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Collision\b2CollideEdge.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Collision\b2CollidePolygon.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Collision\b2Collision.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Contacts\b2Contact.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\b2ContactManager.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Contacts\b2ContactSolver.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Collision\b2Distance.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Joints\b2DistanceJoint.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Common\b2Draw.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Collision\b2DynamicTree.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Contacts\b2EdgeAndCircleContact.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Contacts\b2EdgeAndPolygonContact.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Collision\Shapes\b2EdgeShape.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\b2Fixture.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Joints\b2FrictionJoint.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Joints\b2GearJoint.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\b2Island.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Joints\b2Joint.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Common\b2Math.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Joints\b2MotorJoint.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Joints\b2MouseJoint.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Contacts\b2PolygonAndCircleContact.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Contacts\b2PolygonContact.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Collision\Shapes\b2PolygonShape.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Joints\b2PrismaticJoint.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Joints\b2PulleyJoint.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Joints\b2RevoluteJoint.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Rope\b2Rope.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Joints\b2RopeJoint.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Common\b2Settings.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Common\b2StackAllocator.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Collision\b2TimeOfImpact.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Common\b2Timer.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Joints\b2WeldJoint.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\Joints\b2WheelJoint.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\Box2D\Dynamics\b2World.cpp">
+      <Filter>jni\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="jni\gameobject.cpp">
       <Filter>jni</Filter>
     </ClCompile>
   </ItemGroup>
@@ -41,5 +185,151 @@
     <JCompile Include="src\fi\enko\AntRoitView.java">
       <Filter>src\fi\enko</Filter>
     </JCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="jni\Box2D\Box2D.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Common\b2BlockAllocator.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\b2Body.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Collision\b2BroadPhase.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Contacts\b2ChainAndCircleContact.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Contacts\b2ChainAndPolygonContact.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Collision\Shapes\b2ChainShape.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Contacts\b2CircleContact.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Collision\Shapes\b2CircleShape.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Collision\b2Collision.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Contacts\b2Contact.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\b2ContactManager.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Contacts\b2ContactSolver.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Collision\b2Distance.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Joints\b2DistanceJoint.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Common\b2Draw.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Collision\b2DynamicTree.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Contacts\b2EdgeAndCircleContact.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Contacts\b2EdgeAndPolygonContact.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Collision\Shapes\b2EdgeShape.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\b2Fixture.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Joints\b2FrictionJoint.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Joints\b2GearJoint.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Common\b2GrowableStack.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\b2Island.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Joints\b2Joint.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Common\b2Math.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Joints\b2MotorJoint.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Joints\b2MouseJoint.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Contacts\b2PolygonAndCircleContact.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Contacts\b2PolygonContact.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Collision\Shapes\b2PolygonShape.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Joints\b2PrismaticJoint.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Joints\b2PulleyJoint.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Joints\b2RevoluteJoint.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Rope\b2Rope.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Joints\b2RopeJoint.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Common\b2Settings.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Collision\Shapes\b2Shape.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Common\b2StackAllocator.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Collision\b2TimeOfImpact.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Common\b2Timer.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\b2TimeStep.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Joints\b2WeldJoint.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\Joints\b2WheelJoint.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\b2World.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\Box2D\Dynamics\b2WorldCallbacks.h">
+      <Filter>jni\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="jni\gameobject.h">
+      <Filter>jni</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

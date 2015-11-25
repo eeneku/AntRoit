@@ -143,8 +143,14 @@ bool setupGraphics(int w, int h) {
 	return true;
 }
 
-const GLfloat gTriangleVertices[] = { 0.0f, 0.5f, -0.5f,
--0.5f, 0.5f, -0.5f };
+const GLfloat gTriangleVertices[] = { 
+	-0.5f, 0.5f,
+	0.5f, 0.5f,
+	-0.5f, -0.5f,
+
+	0.5f, 0.5f, 
+	0.5f, -0.5f,
+	-0.5f, -0.5f };
 
 void renderFrame() {
 	static float grey;
@@ -165,7 +171,7 @@ void renderFrame() {
 	checkGlError("glVertexAttribPointer");
 	glEnableVertexAttribArray(gvPositionHandle);
 	checkGlError("glEnableVertexAttribArray");
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 	checkGlError("glDrawArrays");
 }
 
