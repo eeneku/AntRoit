@@ -27,13 +27,19 @@
     </AndroidBuild>
   </ItemGroup>
   <ItemGroup>
-    <JCompile Include="src\fi\enko\AntRoit.java">
-      <Filter>src\fi\enko</Filter>
-    </JCompile>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="jni\AntRoit.cpp">
       <Filter>jni</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <JCompile Include="src\fi\enko\AntRoitActivity.java">
+      <Filter>src\fi\enko</Filter>
+    </JCompile>
+    <JCompile Include="src\fi\enko\AntRoitLib.java">
+      <Filter>src\fi\enko</Filter>
+    </JCompile>
+    <JCompile Include="src\fi\enko\AntRoitView.java">
+      <Filter>src\fi\enko</Filter>
+    </JCompile>
   </ItemGroup>
 </Project>
