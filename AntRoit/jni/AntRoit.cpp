@@ -28,6 +28,10 @@
 
 #include <vector>
 #include <glm\glm.hpp>
+#include <glm\gtc\type_ptr.hpp>
+#include <glm\gtx\transform.hpp>
+
+#include <Box2D\Box2D.h>
 
 #pragma region GL debug
 
@@ -51,24 +55,64 @@ static void checkGlError(const char* op)
 
 #pragma endregion
 
+#pragma region Globals
+
+
+static const float Scale = 32.0f;
+
+b2Vec2 worldToBox2D(float x, float y)
+{
+	return b2Vec2(x / Scale, y / Scale);
+}
+
+b2Vec2 worldToBox2D(glm::vec2 vec) {
+	vec.x /= Scale;
+	vec.y /= Scale;
+	return b2Vec2(vec.x, vec.y);
+}
+
+float worldToBox2D(float f) {
+	return f / Scale;
+}
+
+glm::vec2 box2DToWorld(float x, float y) {
+	return glm::vec2(x * Scale, y * Scale);
+}
+
+glm::vec2 box2DToWorld(b2Vec2 vec) {
+	vec.x *= Scale;
+	vec.y *= Scale;
+	return glm::vec2(vec.x, vec.y);
+}
+
+float box2DToWorld(float f) {
+	return f * Scale;
+}
+
+GLuint program;
+glm::mat4 projection;
+b2World world(b2Vec2(0.0f, worldToBox2D(100.0f)));
+
+
+#pragma endregion
+
 #pragma region Shaders
 
 static const char vertexShader[] =
 "attribute vec4 position;\n"
+"uniform mat4 MVP;\n"
 "void main()\n"
 "{\n"
-"	gl_Position = position;\n"
+"	gl_Position = MVP * position;\n"
 "}\n";
 
 static const char fragmentShader[] =
 "precision mediump float;\n"
+"uniform vec4 color;\n"
 "void main()\n"
 "{\n"
-"	gl_FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
+"	gl_FragColor = color;\n"
 "}\n";
-
-GLuint program;
-GLuint positionHandle;
 
 #pragma endregion
 
@@ -148,59 +192,151 @@ GLuint createProgram(const char* vertexSource, const char* fragmentSource)
 
 #pragma region Shapes
 
-const float rectangle[] =
-{
-	0.0f, 1.0f,
-	1.0f, 1.0f,
-	0.0f, 0.0f,
-
-	1.0f, 1.0f,
-	1.0f, 0.0f,
-	0.0f, 0.0f
-};
-
-const float triangle[] =
-{
-	0.0f, 1.0f,
-	1.0f, 1.0f,
-	0.0f, 0.0f
-};
-
 struct Shape
 {
-	virtual void draw() = 0;
+	Shape(float x, float y, const glm::vec4& color, b2World& world) : color(color), x(x), y(y), vertices(nullptr), numVertices(0), model(1.0f), world(world)
+	{
+
+	}
+
+	~Shape()
+	{
+		delete[] vertices;
+		vertices = nullptr;
+
+		world.DestroyBody(body);
+		body = nullptr;
+	}
+
+
+	void draw()
+	{
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, vertices);
+
+		glUniform4fv(glGetUniformLocation(program, "color"), 1, glm::value_ptr(color));
+		model = glm::translate(glm::vec3(box2DToWorld(body->GetPosition().x), box2DToWorld(body->GetPosition().y), 0.0f)) * glm::rotate(body->GetAngle(), glm::vec3(0.0f, 0.0f, 1.0f));
+		glUniformMatrix4fv(glGetUniformLocation(program, "MVP"), 1, GL_FALSE, glm::value_ptr(projection * model));
+		checkGlError("glVertexAttribPointer");
+
+		glDrawArrays(GL_TRIANGLES, 0, numVertices);
+		checkGlError("glDrawArrays");
+	}
 
 protected:
+
+	glm::mat4 model;
 	glm::vec4 color;
+	b2World& world;
+	b2Body* body;
 	float x;
 	float y;
+	float* vertices;
+	int numVertices;
 };
 
 struct Triangle : public Shape
 {
-	void draw()
+	Triangle(float x, float y, float width, float height, const glm::vec4& color, b2World &world) : Shape(x, y, color, world)
 	{
-		glVertexAttribPointer(positionHandle, 2, GL_FLOAT, GL_FALSE, 0, triangle);
-		checkGlError("glVertexAttribPointer");
+		vertices = new float[6] {
+			0.0f, height,
+			width, height,
+			0.0f, 0.0f 
+		};
 
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-		checkGlError("glDrawArrays");
+		numVertices = 6;
+
+		b2BodyDef bodyDef;
+		bodyDef.position = worldToBox2D(x, y);;
+		bodyDef.type = b2_dynamicBody;
+		body = world.CreateBody(&bodyDef);
+
+		b2PolygonShape shape;
+		b2Vec2 shapetices[3];
+
+		shapetices[0].Set(0.0f, worldToBox2D(height));
+		shapetices[1].Set(worldToBox2D(width), worldToBox2D(height));
+		shapetices[2].Set(0.0f, 0.0f);
+
+		shape.Set(shapetices, 3);
+
+		b2FixtureDef fixtureDef;
+		fixtureDef.density = 1.0f;
+		fixtureDef.shape = &shape;
+
+		body->CreateFixture(&fixtureDef);
 	}
 };
 
 struct Rectangle : public Shape
 {
-	void draw()
+	Rectangle(float x, float y, float width, float height, const glm::vec4& color, b2World &world) : Shape(x, y, color, world)
 	{
-		glVertexAttribPointer(positionHandle, 2, GL_FLOAT, GL_FALSE, 0, rectangle);
-		checkGlError("glVertexAttribPointer");
+		vertices = new float[12] {
+			0.0f, height,
+			width, height,
+			0.0f, 0.0f,
 
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		checkGlError("glDrawArrays");
+			width, height,
+			width, 0.0f,
+			0.0f, 0.0f
+		};
+
+		numVertices = 12;
+
+		b2BodyDef bodyDef;
+		bodyDef.position = worldToBox2D(x, y);;
+		bodyDef.type = b2_dynamicBody;
+		body = world.CreateBody(&bodyDef);
+
+		b2PolygonShape shape;
+		shape.SetAsBox(worldToBox2D(width), worldToBox2D(height));
+
+		b2FixtureDef fixtureDef;
+		fixtureDef.density = 1.0f;
+		fixtureDef.shape = &shape;
+
+		body->CreateFixture(&fixtureDef);
 	}
 };
 
 std::vector<Shape*> shapes;
+std::vector<b2Body*> walls;
+
+float createWall(float x, float y, float width, float height)
+{
+	b2Body* body;
+	b2BodyDef bodyDef;
+	bodyDef.position = worldToBox2D(x, y);;
+	bodyDef.type = b2_staticBody;
+	body = world.CreateBody(&bodyDef);
+
+	b2PolygonShape shape;
+	shape.SetAsBox(worldToBox2D(width), worldToBox2D(height));
+
+	b2FixtureDef fixtureDef;
+	fixtureDef.shape = &shape;
+
+	body->CreateFixture(&fixtureDef);
+
+	walls.push_back(body);
+}
+
+float createWalls(int width, int height)
+{
+	// Top
+	createWall(0.0f, -5.0f, width, 10.0f);
+
+	// Bottom
+	createWall(0.0f, height + 5.0f, width, 10.0f);
+
+	// Left
+	createWall(-5.0f, 0.0f, 10.0f, height);
+
+	// Right
+	createWall(width + 5.0f, 0.0f, 10.0f, height);
+}
 
 #pragma endregion
 
@@ -222,15 +358,18 @@ void init(int width, int height)
 		return;
 	}
 
-	positionHandle = glGetAttribLocation(program, "position");
-	checkGlError("glGetAttribLocation");
-	LOGI("glGetAttribLocation(\"position\") = %d\n", positionHandle);
-
 	glViewport(0, 0, width, height);
 	checkGlError("glViewport");
 
 	glClearColor(0.7f, 0.3f, 0.1f, 1.0f);
 	checkGlError("glClearColor");
+
+	projection = glm::ortho(0.0f, float(width), float(height), 0.0f);
+
+	createWalls(width, height);
+
+	shapes.push_back(new Rectangle(0.0f, 0.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world));
+	shapes.push_back(new Triangle(100.0f, 200.0f, 500.0f, 500.0f, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), world));
 }
 
 #pragma endregion
@@ -239,6 +378,7 @@ void init(int width, int height)
 
 void update()
 {
+	world.Step(1.0f / 30.0f, 8, 3);
 }
 
 #pragma endregion
@@ -265,12 +405,12 @@ void draw()
 
 extern "C"
 {
-	JNIEXPORT void JNICALL Java_fi_enko_antroit_AntRoitLib_init(JNIEnv * env, jobject obj, jint width, jint height)
+	JNIEXPORT void JNICALL Java_fi_enko_antroit_AntRoitLib_init(JNIEnv* env, jobject obj, jint width, jint height)
 	{
 		init(width, height);
 	}
 
-	JNIEXPORT void JNICALL Java_fi_enko_antroit_AntRoitLib_step(JNIEnv * env, jobject obj)
+	JNIEXPORT void JNICALL Java_fi_enko_antroit_AntRoitLib_step(JNIEnv* env, jobject obj)
 	{
 		update();
 		draw();
