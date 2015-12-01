@@ -91,7 +91,7 @@ float box2DToWorld(float f) {
 
 GLuint program;
 glm::mat4 projection;
-b2World world(b2Vec2(0.0f, worldToBox2D(100.0f)));
+b2World world(b2Vec2(0.0f, worldToBox2D(500.0f)));
 
 
 #pragma endregion
@@ -237,31 +237,33 @@ protected:
 
 struct Triangle : public Shape
 {
-	Triangle(float x, float y, float width, float height, const glm::vec4& color, b2World &world) : Shape(x, y, color, world)
+	Triangle(float x, float y, float width, float height, const glm::vec4& color, b2World &world, bool dynamic) : Shape(x, y, color, world)
 	{
 		vertices = new float[6] {
-			0.0f, height,
-			width, height,
-			0.0f, 0.0f 
+			-width / 2, height / 2,
+			width / 2, height / 2,
+			-width / 2, -height / 2 
 		};
 
 		numVertices = 6;
 
 		b2BodyDef bodyDef;
 		bodyDef.position = worldToBox2D(x, y);;
-		bodyDef.type = b2_dynamicBody;
+		
+		bodyDef.type = dynamic ? b2_dynamicBody : b2_staticBody;
 		body = world.CreateBody(&bodyDef);
 
 		b2PolygonShape shape;
 		b2Vec2 shapetices[3];
 
-		shapetices[0].Set(0.0f, worldToBox2D(height));
-		shapetices[1].Set(worldToBox2D(width), worldToBox2D(height));
-		shapetices[2].Set(0.0f, 0.0f);
+		shapetices[0].Set(-worldToBox2D(width / 2), worldToBox2D(height / 2));
+		shapetices[1].Set(worldToBox2D(width / 2), worldToBox2D(height / 2));
+		shapetices[2].Set(-worldToBox2D(width / 2), -worldToBox2D(height / 2));
 
 		shape.Set(shapetices, 3);
 
 		b2FixtureDef fixtureDef;
+		fixtureDef.friction = 1.0f;
 		fixtureDef.density = 1.0f;
 		fixtureDef.shape = &shape;
 
@@ -271,29 +273,30 @@ struct Triangle : public Shape
 
 struct Rectangle : public Shape
 {
-	Rectangle(float x, float y, float width, float height, const glm::vec4& color, b2World &world) : Shape(x, y, color, world)
+	Rectangle(float x, float y, float width, float height, const glm::vec4& color, b2World &world, bool dynamic) : Shape(x, y, color, world)
 	{
 		vertices = new float[12] {
-			0.0f, height,
-			width, height,
-			0.0f, 0.0f,
+			-width / 2,	height/2,
+			width / 2,  height / 2,
+			-width / 2, -height / 2,
 
-			width, height,
-			width, 0.0f,
-			0.0f, 0.0f
+			width / 2,  height / 2,
+			width / 2,  -height / 2,
+			-width / 2, -height / 2
 		};
 
 		numVertices = 12;
 
 		b2BodyDef bodyDef;
 		bodyDef.position = worldToBox2D(x, y);;
-		bodyDef.type = b2_dynamicBody;
+		bodyDef.type = dynamic ? b2_dynamicBody : b2_staticBody;
 		body = world.CreateBody(&bodyDef);
 
 		b2PolygonShape shape;
-		shape.SetAsBox(worldToBox2D(width), worldToBox2D(height));
+		shape.SetAsBox(worldToBox2D(width / 2), worldToBox2D(height / 2));
 
 		b2FixtureDef fixtureDef;
+		fixtureDef.friction = 1.0f;
 		fixtureDef.density = 1.0f;
 		fixtureDef.shape = &shape;
 
@@ -364,12 +367,18 @@ void init(int width, int height)
 	glClearColor(0.7f, 0.3f, 0.1f, 1.0f);
 	checkGlError("glClearColor");
 
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	projection = glm::ortho(0.0f, float(width), float(height), 0.0f);
 
 	createWalls(width, height);
 
-	shapes.push_back(new Rectangle(0.0f, 0.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world));
-	shapes.push_back(new Triangle(100.0f, 200.0f, 500.0f, 500.0f, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), world));
+	shapes.push_back(new Rectangle(150.0f, 50.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, true));
+	shapes.push_back(new Triangle(350.0f, 250.0f, 500.0f, 500.0f, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), world, true));
+	shapes.push_back(new Triangle(500.0f, 1000.0f, 100.0f, 100.0f, glm::vec4(0.0f, 0.0f, 1.0f, 0.5f), world, false));
+	shapes.push_back(new Rectangle(600.0f, 1200.0f, 500.0f, 50.0f, glm::vec4(1.0f, 1.0f, 0.0f, 0.8f), world, false));
 }
 
 #pragma endregion
@@ -378,7 +387,7 @@ void init(int width, int height)
 
 void update()
 {
-	world.Step(1.0f / 30.0f, 8, 3);
+	world.Step(1.0f / 60.0f, 8, 3);
 }
 
 #pragma endregion
