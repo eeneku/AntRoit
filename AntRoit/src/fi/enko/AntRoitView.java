@@ -39,6 +39,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.os.SystemClock;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -326,7 +327,7 @@ class AntRoitView extends GLSurfaceView {
 
     private static class Renderer implements GLSurfaceView.Renderer {
         public void onDrawFrame(GL10 gl) {
-            AntRoitLib.step();
+            AntRoitLib.step(SystemClock.elapsedRealtime());
         }
 
         public void onSurfaceChanged(GL10 gl, int width, int height) {

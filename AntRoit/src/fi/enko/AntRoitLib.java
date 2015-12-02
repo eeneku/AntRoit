@@ -29,5 +29,5 @@ public class AntRoitLib {
      * @param height the current view height
      */
      public static native void init(int width, int height);
-     public static native void step();
+     public static native void step(long time);
 }

@@ -57,8 +57,7 @@ static void checkGlError(const char* op)
 
 #pragma region Globals
 
-
-static const float Scale = 32.0f;
+static const float Scale = 64.0f;
 
 b2Vec2 worldToBox2D(float x, float y)
 {
@@ -91,7 +90,7 @@ float box2DToWorld(float f) {
 
 GLuint program;
 glm::mat4 projection;
-b2World world(b2Vec2(0.0f, worldToBox2D(500.0f)));
+b2World world(b2Vec2(0.0f, worldToBox2D(64.0f)));
 
 
 #pragma endregion
@@ -223,6 +222,16 @@ struct Shape
 		checkGlError("glDrawArrays");
 	}
 
+	void setRotation(float angle)
+	{
+		body->SetTransform(worldToBox2D(x, y), angle);
+	}
+
+	void setGravity(float gravity)
+	{
+		body->SetGravityScale(gravity);
+	}
+
 protected:
 
 	glm::mat4 model;
@@ -263,7 +272,6 @@ struct Triangle : public Shape
 		shape.Set(shapetices, 3);
 
 		b2FixtureDef fixtureDef;
-		fixtureDef.friction = 1.0f;
 		fixtureDef.density = 1.0f;
 		fixtureDef.shape = &shape;
 
@@ -296,7 +304,6 @@ struct Rectangle : public Shape
 		shape.SetAsBox(worldToBox2D(width / 2), worldToBox2D(height / 2));
 
 		b2FixtureDef fixtureDef;
-		fixtureDef.friction = 1.0f;
 		fixtureDef.density = 1.0f;
 		fixtureDef.shape = &shape;
 
@@ -375,19 +382,52 @@ void init(int width, int height)
 
 	createWalls(width, height);
 
-	shapes.push_back(new Rectangle(150.0f, 50.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, true));
-	shapes.push_back(new Triangle(350.0f, 250.0f, 500.0f, 500.0f, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), world, true));
-	shapes.push_back(new Triangle(500.0f, 1000.0f, 100.0f, 100.0f, glm::vec4(0.0f, 0.0f, 1.0f, 0.5f), world, false));
-	shapes.push_back(new Rectangle(600.0f, 1200.0f, 500.0f, 50.0f, glm::vec4(1.0f, 1.0f, 0.0f, 0.8f), world, false));
+	//shapes.push_back(new Rectangle(150.0f, 50.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, true));
+	//shapes.push_back(new Rectangle(450.0f, 50.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, true));
+	//shapes.push_back(new Rectangle(750.0f, 50.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, true));
+	shapes.push_back(new Triangle(width / 2.0f, 50.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, true));
+	
+	shapes.push_back(new Rectangle(800.0f, 200.0f, 800.0f, 50.0f, glm::vec4(1.0f, 1.0f, 0.0f, 0.8f), world, false));
+	shapes.back()->setRotation(glm::radians(-35.0f));
+
+	shapes.push_back(new Rectangle(width / 2.0f, height / 2.0f, 100.0f, 100.0f, glm::vec4(0.0f, 0.0f, 0.0f, 0.8f), world, true));
+
+	shapes.push_back(new Rectangle(200.0f, 450.0f, 800.0f, 50.0f, glm::vec4(1.0f, 0.0f, 1.0f, 0.4f), world, false));
+	shapes.back()->setRotation(glm::radians(50.0f));
+
+	shapes.push_back(new Rectangle(800.0f, 1000.0f, 800.0f, 50.0f, glm::vec4(0.0f, 1.0f, 1.0f, 0.3f), world, false));
+	shapes.back()->setRotation(glm::radians(-15.0f));
+
+	shapes.push_back(new Triangle(300.0f, height - 200.0f, 600.0f, 400.0f, glm::vec4(0.0f, 0.0f, 1.0f, 0.7f), world, false));
+
+	shapes.push_back(new Triangle(width - 50.0f, height - 200.0f, 200.0f, 400.0f, glm::vec4(1.0f, 0.0f, 1.0f, 0.7f), world, false));
+	shapes.back()->setRotation(glm::radians(-90.0f));
 }
 
 #pragma endregion
 
 #pragma region Update
 
-void update()
+float currentTime = 0.0f;
+float accumulator = 0.0f;
+float step = 1.0f / 60.0f;
+
+void update(int time)
 {
-	world.Step(1.0f / 60.0f, 8, 3);
+
+	float newTime = time / 1000.0f;
+
+	float deltaTime = std::min(newTime - currentTime, 0.25f);
+	currentTime = newTime;
+
+	accumulator += deltaTime;
+
+	while (accumulator >= step)
+	{
+		world.Step(step, 8, 3);
+
+		accumulator -= step;
+	}
 }
 
 #pragma endregion
@@ -419,9 +459,9 @@ extern "C"
 		init(width, height);
 	}
 
-	JNIEXPORT void JNICALL Java_fi_enko_antroit_AntRoitLib_step(JNIEnv* env, jobject obj)
+	JNIEXPORT void JNICALL Java_fi_enko_antroit_AntRoitLib_step(JNIEnv* env, jobject obj, jlong time)
 	{
-		update();
+		update(time);
 		draw();
 	}
 }
