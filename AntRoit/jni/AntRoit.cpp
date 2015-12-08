@@ -57,7 +57,7 @@ static void checkGlError(const char* op)
 
 #pragma region Globals
 
-static const float Scale = 64.0f;
+static const float Scale = 16.0f;
 
 b2Vec2 worldToBox2D(float x, float y)
 {
@@ -98,11 +98,11 @@ b2World world(b2Vec2(0.0f, worldToBox2D(64.0f)));
 #pragma region Shaders
 
 static const char vertexShader[] =
-"attribute vec4 position;\n"
+"attribute vec2 position;\n"
 "uniform mat4 MVP;\n"
 "void main()\n"
 "{\n"
-"	gl_Position = MVP * position;\n"
+"	gl_Position = MVP * vec4(position, 0.0f, 1.0f);\n"
 "}\n";
 
 static const char fragmentShader[] =
@@ -193,44 +193,19 @@ GLuint createProgram(const char* vertexSource, const char* fragmentSource)
 
 struct Shape
 {
-	Shape(float x, float y, const glm::vec4& color, b2World& world) : color(color), x(x), y(y), vertices(nullptr), numVertices(0), model(1.0f), world(world), VBO(0)
+	Shape(float x, float y, float width, float height, const glm::vec4& color, b2World& world) : color(color), x(x), y(y), width(width), height(height), model(1.0f), world(world)
 	{
-		glGenBuffers(1, &VBO);
+
 	}
 
 	~Shape()
 	{
-		glDeleteBuffers(1, &VBO);
-
-		delete[] vertices;
-		vertices = nullptr;
-
 		world.DestroyBody(body);
 		body = nullptr;
 	}
 
 
-	void draw()
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
-
-		model = glm::translate(glm::vec3(x, y, 0.0f)) * glm::rotate(body->GetAngle(), 
-			glm::vec3(0.0f, 0.0f, 1.0f));
-
-		glUniform4fv(glGetUniformLocation(program, "color"), 1, glm::value_ptr(color));
-		glUniformMatrix4fv(glGetUniformLocation(program, "MVP"), 1, GL_FALSE, glm::value_ptr(projection * model));
-		checkGlError("glVertexAttribPointer");
-
-		glDrawArrays(GL_TRIANGLES, 0, numVertices);
-		checkGlError("glDrawArrays");
-
-		glDisableVertexAttribArray(0);
-
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
+	virtual void draw() = 0;
 
 	void setRotation(float angle)
 	{
@@ -250,79 +225,30 @@ protected:
 	b2Body* body;
 	float x;
 	float y;
-	GLfloat* vertices;
-	int numVertices;
-	GLuint VBO;
+	float width;
+	float height;
 };
 
 struct Triangle : public Shape
 {
-	Triangle(float x, float y, float width, float height, const glm::vec4& color, b2World &world, bool dynamic) : Shape(x, y, color, world)
+	Triangle(float x, float y, float width, float height, const glm::vec4& color, b2World &world, bool dynamic) : Shape(x, y, width, height, color, world)
 	{
-		vertices = new float[6] {
-			-width / 2, height / 2,
-			width / 2, height / 2,
-			-width / 2, -height / 2 
-		};
-
-		numVertices = 6;
-
-		b2BodyDef bodyDef;
-		bodyDef.position = worldToBox2D(x, y);;
-		
-		bodyDef.type = dynamic ? b2_dynamicBody : b2_staticBody;
-		body = world.CreateBody(&bodyDef);
-
-		b2PolygonShape shape;
-		b2Vec2 shapetices[3];
-
-		shapetices[0].Set(-worldToBox2D(width / 2), worldToBox2D(height / 2));
-		shapetices[1].Set(worldToBox2D(width / 2), worldToBox2D(height / 2));
-		shapetices[2].Set(-worldToBox2D(width / 2), -worldToBox2D(height / 2));
-
-		shape.Set(shapetices, 3);
-
-		b2FixtureDef fixtureDef;
-		fixtureDef.density = 1.0f;
-		fixtureDef.shape = &shape;
-
-		body->CreateFixture(&fixtureDef);
-
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
-
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 };
 
 struct Rectangle : public Shape
 {
-	Rectangle(float x, float y, float width, float height, const glm::vec4& color, b2World &world, bool dynamic) : Shape(x, y, color, world)
+	Rectangle(float x, float y, float width, float height, const glm::vec4& color, b2World &world, bool dynamic) : Shape(x, y, width, height, color, world)
 	{
-		vertices = new float[12] {
-			-width / 2,	height/2,
-			width / 2,  height / 2,
-			-width / 2, -height / 2,
-
-			width / 2,  height / 2,
-			width / 2,  -height / 2,
-			-width / 2, -height / 2
-		};
-
-		LOGI("VERTICES: %f, %f", width / 2, height / 2);
-
-		numVertices = 12;
-
 		b2BodyDef bodyDef;
-		bodyDef.position = worldToBox2D(x, y);;
+		bodyDef.position = worldToBox2D(x - width / 2, y - width / 2);;
 		bodyDef.type = dynamic ? b2_dynamicBody : b2_staticBody;
 		body = world.CreateBody(&bodyDef);
 
 		LOGI("BODY POS: %f, %f", worldToBox2D(x), worldToBox2D(y));
 
 		b2PolygonShape shape;
-		shape.SetAsBox(worldToBox2D(width / 2), worldToBox2D(height / 2));
+		shape.SetAsBox(worldToBox2D(width), worldToBox2D(height));
 
 		LOGI("BODY SIZE: %f, %f", worldToBox2D(width / 2), worldToBox2D(height / 2));
 
@@ -331,12 +257,50 @@ struct Rectangle : public Shape
 		fixtureDef.shape = &shape;
 
 		body->CreateFixture(&fixtureDef);
+	}
+
+	void draw()
+	{
+		GLfloat vertices[] {
+			0.0f, height,
+			width, height,
+			0.0f, 0.0f,
+
+			width, height,
+			width, 0.0f,
+			0.0f, 0.0f
+		};
+
+		GLuint VBO;
+
+		glGenBuffers(1, &VBO);
 
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
+		glUseProgram(program);
+
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
+
+		glm::mat4 model = glm::translate(glm::vec3(box2DToWorld(body->GetPosition().x), box2DToWorld(body->GetPosition().y), 0.0f)) * glm::rotate(body->GetAngle(),
+			glm::vec3(0.0f, 0.0f, 1.0f));
+
+		glUniform4fv(glGetUniformLocation(program, "color"), 1, glm::value_ptr(glm::vec4(0.0f, 0.5f, 0.6f, 1.0f)));
+		glUniformMatrix4fv(glGetUniformLocation(program, "MVP"), 1, GL_FALSE, glm::value_ptr(projection * model));
+		checkGlError("glVertexAttribPointer");
+
+		glDrawArrays(GL_TRIANGLES, 0, 12);
+		checkGlError("glDrawArrays");
+
+		glDisableVertexAttribArray(0);
+
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glUseProgram(0);
+
+		glDeleteBuffers(1, &VBO);
 	}
 };
 
@@ -422,8 +386,8 @@ float createShapes(int width, int height)
 	shapes.push_back(new Triangle(width - 50.0f, height - 200.0f, 200.0f, 400.0f, glm::vec4(1.0f, 0.0f, 1.0f, 0.7f), world, false));
 	shapes.back()->setRotation(glm::radians(-90.0f));*/
 
-	float w = width / 10.0f;
-	float h = height / 10.0f;
+	float w = width / 5.0f;
+	float h = w;
 
 	LOGI("SIZE: %f, %f", w, h);
 
@@ -431,7 +395,7 @@ float createShapes(int width, int height)
 
 	shapes.push_back(new Rectangle(width / 2.0f, height / 2.0f, w, h, glm::vec4(0.0f, 0.0f, 0.8f, 1.0f), world, true));
 
-	shapes.back()->setRotation(glm::radians(45.0f));
+	shapes.back()->setRotation(glm::radians(44.5f));
 }
 
 #pragma endregion
@@ -515,28 +479,6 @@ void draw()
 	{
 		shape->draw();
 	}
-
-	//glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-	//glEnableVertexAttribArray(0);
-	//glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
-
-	//model = glm::translate(glm::vec3(box2DToWorld(body->GetPosition().x),
-	//	box2DToWorld(body->GetPosition().y), 0.0f)) * glm::rotate(body->GetAngle(),
-	//	glm::vec3(0.0f, 0.0f, 1.0f));
-
-	//glUniform4fv(glGetUniformLocation(program, "color"), 1, glm::value_ptr(color));
-	//glUniformMatrix4fv(glGetUniformLocation(program, "MVP"), 1, GL_FALSE, glm::value_ptr(projection * model));
-	//checkGlError("glVertexAttribPointer");
-
-	//glDrawArrays(GL_TRIANGLES, 0, numVertices);
-	//checkGlError("glDrawArrays");
-
-	//glDisableVertexAttribArray(0);
-
-	//glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	glUseProgram(0);
 }
 
 #pragma endregion
