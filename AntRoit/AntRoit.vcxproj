@@ -24,12 +24,15 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|Tegra-Android'">
     <AndroidTargetAPI>android-15</AndroidTargetAPI>
+    <AndroidMinAPI>android-9</AndroidMinAPI>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|Tegra-Android'">
-    <AndroidTargetAPI>android-17</AndroidTargetAPI>
+    <AndroidTargetAPI>android-15</AndroidTargetAPI>
+    <AndroidMinAPI>android-9</AndroidMinAPI>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Shipping|Tegra-Android'">
-    <AndroidTargetAPI>android-17</AndroidTargetAPI>
+    <AndroidTargetAPI>android-15</AndroidTargetAPI>
+    <AndroidMinAPI>android-9</AndroidMinAPI>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">

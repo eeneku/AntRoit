@@ -193,13 +193,15 @@ GLuint createProgram(const char* vertexSource, const char* fragmentSource)
 
 struct Shape
 {
-	Shape(float x, float y, const glm::vec4& color, b2World& world) : color(color), x(x), y(y), vertices(nullptr), numVertices(0), model(1.0f), world(world)
+	Shape(float x, float y, const glm::vec4& color, b2World& world) : color(color), x(x), y(y), vertices(nullptr), numVertices(0), model(1.0f), world(world), VBO(0)
 	{
-
+		glGenBuffers(1, &VBO);
 	}
 
 	~Shape()
 	{
+		glDeleteBuffers(1, &VBO);
+
 		delete[] vertices;
 		vertices = nullptr;
 
@@ -210,16 +212,24 @@ struct Shape
 
 	void draw()
 	{
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
 		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, vertices);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
+
+		model = glm::translate(glm::vec3(x, y, 0.0f)) * glm::rotate(body->GetAngle(), 
+			glm::vec3(0.0f, 0.0f, 1.0f));
 
 		glUniform4fv(glGetUniformLocation(program, "color"), 1, glm::value_ptr(color));
-		model = glm::translate(glm::vec3(box2DToWorld(body->GetPosition().x), box2DToWorld(body->GetPosition().y), 0.0f)) * glm::rotate(body->GetAngle(), glm::vec3(0.0f, 0.0f, 1.0f));
 		glUniformMatrix4fv(glGetUniformLocation(program, "MVP"), 1, GL_FALSE, glm::value_ptr(projection * model));
 		checkGlError("glVertexAttribPointer");
 
 		glDrawArrays(GL_TRIANGLES, 0, numVertices);
 		checkGlError("glDrawArrays");
+
+		glDisableVertexAttribArray(0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
 	void setRotation(float angle)
@@ -240,8 +250,9 @@ protected:
 	b2Body* body;
 	float x;
 	float y;
-	float* vertices;
+	GLfloat* vertices;
 	int numVertices;
+	GLuint VBO;
 };
 
 struct Triangle : public Shape
@@ -276,6 +287,12 @@ struct Triangle : public Shape
 		fixtureDef.shape = &shape;
 
 		body->CreateFixture(&fixtureDef);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 };
 
@@ -293,6 +310,8 @@ struct Rectangle : public Shape
 			-width / 2, -height / 2
 		};
 
+		LOGI("VERTICES: %f, %f", width / 2, height / 2);
+
 		numVertices = 12;
 
 		b2BodyDef bodyDef;
@@ -300,19 +319,51 @@ struct Rectangle : public Shape
 		bodyDef.type = dynamic ? b2_dynamicBody : b2_staticBody;
 		body = world.CreateBody(&bodyDef);
 
+		LOGI("BODY POS: %f, %f", worldToBox2D(x), worldToBox2D(y));
+
 		b2PolygonShape shape;
 		shape.SetAsBox(worldToBox2D(width / 2), worldToBox2D(height / 2));
+
+		LOGI("BODY SIZE: %f, %f", worldToBox2D(width / 2), worldToBox2D(height / 2));
 
 		b2FixtureDef fixtureDef;
 		fixtureDef.density = 1.0f;
 		fixtureDef.shape = &shape;
 
 		body->CreateFixture(&fixtureDef);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 };
 
 std::vector<Shape*> shapes;
 std::vector<b2Body*> walls;
+
+Rectangle* vittu;
+
+void clearWalls()
+{
+	for (auto wall : walls)
+	{
+		world.DestroyBody(wall);
+	}
+
+	walls.clear();
+}
+
+void clearShapes()
+{
+	for (auto shape : shapes)
+	{
+		delete shape;
+	}
+
+	shapes.clear();
+}
 
 float createWall(float x, float y, float width, float height)
 {
@@ -348,12 +399,50 @@ float createWalls(int width, int height)
 	createWall(width + 5.0f, 0.0f, 10.0f, height);
 }
 
+float createShapes(int width, int height)
+{
+	//shapes.push_back(new Rectangle(150.0f, 50.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, true));
+	//shapes.push_back(new Rectangle(450.0f, 50.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, true));
+	//shapes.push_back(new Rectangle(750.0f, 50.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, true));
+	/*shapes.push_back(new Triangle(width / 2.0f, 50.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, true));
+
+	shapes.push_back(new Rectangle(800.0f, 200.0f, 800.0f, 50.0f, glm::vec4(1.0f, 1.0f, 0.0f, 0.8f), world, false));
+	shapes.back()->setRotation(glm::radians(-35.0f));
+
+	shapes.push_back(new Rectangle(width / 2.0f, height / 2.0f, 100.0f, 100.0f, glm::vec4(0.0f, 0.0f, 0.0f, 0.8f), world, true));
+
+	shapes.push_back(new Rectangle(200.0f, 450.0f, 800.0f, 50.0f, glm::vec4(1.0f, 0.0f, 1.0f, 0.4f), world, false));
+	shapes.back()->setRotation(glm::radians(50.0f));
+
+	shapes.push_back(new Rectangle(800.0f, 1000.0f, 800.0f, 50.0f, glm::vec4(0.0f, 1.0f, 1.0f, 0.3f), world, false));
+	shapes.back()->setRotation(glm::radians(-15.0f));
+
+	shapes.push_back(new Triangle(300.0f, height - 200.0f, 600.0f, 400.0f, glm::vec4(0.0f, 0.0f, 1.0f, 0.7f), world, false));
+
+	shapes.push_back(new Triangle(width - 50.0f, height - 200.0f, 200.0f, 400.0f, glm::vec4(1.0f, 0.0f, 1.0f, 0.7f), world, false));
+	shapes.back()->setRotation(glm::radians(-90.0f));*/
+
+	float w = width / 10.0f;
+	float h = height / 10.0f;
+
+	LOGI("SIZE: %f, %f", w, h);
+
+	LOGI("POS: %f, %f", width / 2.0f, height / 2.0f);
+
+	shapes.push_back(new Rectangle(width / 2.0f, height / 2.0f, w, h, glm::vec4(0.0f, 0.0f, 0.8f, 1.0f), world, true));
+
+	shapes.back()->setRotation(glm::radians(45.0f));
+}
+
 #pragma endregion
 
-#pragma region Init
+#pragma region Init graphics
 
-void init(int width, int height)
+void initGraphics(int width, int height)
 {
+	clearWalls();
+	clearShapes();
+
 	printGLString("Version", GL_VERSION);
 	printGLString("Vendor", GL_VENDOR);
 	printGLString("Renderer", GL_RENDERER);
@@ -378,30 +467,10 @@ void init(int width, int height)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	projection = glm::ortho(0.0f, float(width), float(height), 0.0f);
+	projection = glm::ortho(0.0f, static_cast<float>(width), static_cast<float>(height), 0.0f);
 
 	createWalls(width, height);
-
-	//shapes.push_back(new Rectangle(150.0f, 50.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, true));
-	//shapes.push_back(new Rectangle(450.0f, 50.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, true));
-	//shapes.push_back(new Rectangle(750.0f, 50.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, true));
-	shapes.push_back(new Triangle(width / 2.0f, 50.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, true));
-	
-	shapes.push_back(new Rectangle(800.0f, 200.0f, 800.0f, 50.0f, glm::vec4(1.0f, 1.0f, 0.0f, 0.8f), world, false));
-	shapes.back()->setRotation(glm::radians(-35.0f));
-
-	shapes.push_back(new Rectangle(width / 2.0f, height / 2.0f, 100.0f, 100.0f, glm::vec4(0.0f, 0.0f, 0.0f, 0.8f), world, true));
-
-	shapes.push_back(new Rectangle(200.0f, 450.0f, 800.0f, 50.0f, glm::vec4(1.0f, 0.0f, 1.0f, 0.4f), world, false));
-	shapes.back()->setRotation(glm::radians(50.0f));
-
-	shapes.push_back(new Rectangle(800.0f, 1000.0f, 800.0f, 50.0f, glm::vec4(0.0f, 1.0f, 1.0f, 0.3f), world, false));
-	shapes.back()->setRotation(glm::radians(-15.0f));
-
-	shapes.push_back(new Triangle(300.0f, height - 200.0f, 600.0f, 400.0f, glm::vec4(0.0f, 0.0f, 1.0f, 0.7f), world, false));
-
-	shapes.push_back(new Triangle(width - 50.0f, height - 200.0f, 200.0f, 400.0f, glm::vec4(1.0f, 0.0f, 1.0f, 0.7f), world, false));
-	shapes.back()->setRotation(glm::radians(-90.0f));
+	createShapes(width, height);
 }
 
 #pragma endregion
@@ -446,6 +515,28 @@ void draw()
 	{
 		shape->draw();
 	}
+
+	//glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+	//glEnableVertexAttribArray(0);
+	//glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
+
+	//model = glm::translate(glm::vec3(box2DToWorld(body->GetPosition().x),
+	//	box2DToWorld(body->GetPosition().y), 0.0f)) * glm::rotate(body->GetAngle(),
+	//	glm::vec3(0.0f, 0.0f, 1.0f));
+
+	//glUniform4fv(glGetUniformLocation(program, "color"), 1, glm::value_ptr(color));
+	//glUniformMatrix4fv(glGetUniformLocation(program, "MVP"), 1, GL_FALSE, glm::value_ptr(projection * model));
+	//checkGlError("glVertexAttribPointer");
+
+	//glDrawArrays(GL_TRIANGLES, 0, numVertices);
+	//checkGlError("glDrawArrays");
+
+	//glDisableVertexAttribArray(0);
+
+	//glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glUseProgram(0);
 }
 
 #pragma endregion
@@ -456,7 +547,7 @@ extern "C"
 {
 	JNIEXPORT void JNICALL Java_fi_enko_antroit_AntRoitLib_init(JNIEnv* env, jobject obj, jint width, jint height)
 	{
-		init(width, height);
+		initGraphics(width, height);
 	}
 
 	JNIEXPORT void JNICALL Java_fi_enko_antroit_AntRoitLib_step(JNIEnv* env, jobject obj, jlong time)
