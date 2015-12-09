@@ -26,6 +26,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include <random>
+
 #include <vector>
 #include <glm\glm.hpp>
 #include <glm\gtc\type_ptr.hpp>
@@ -90,7 +92,7 @@ float box2DToWorld(float f) {
 
 GLuint program;
 glm::mat4 projection;
-b2World world(b2Vec2(0.0f, worldToBox2D(64.0f)));
+b2World world(b2Vec2(0.0f, worldToBox2D(128.0f)));
 
 
 #pragma endregion
@@ -195,7 +197,7 @@ struct Shape
 {
 	Shape(float x, float y, float width, float height, const glm::vec4& color, b2World& world) : color(color), x(x), y(y), width(width), height(height), model(1.0f), world(world)
 	{
-
+	
 	}
 
 	~Shape()
@@ -241,14 +243,14 @@ struct Rectangle : public Shape
 	Rectangle(float x, float y, float width, float height, const glm::vec4& color, b2World &world, bool dynamic) : Shape(x, y, width, height, color, world)
 	{
 		b2BodyDef bodyDef;
-		bodyDef.position = worldToBox2D(x - width / 2, y - width / 2);;
+		bodyDef.position = worldToBox2D(x, y);
 		bodyDef.type = dynamic ? b2_dynamicBody : b2_staticBody;
 		body = world.CreateBody(&bodyDef);
 
 		LOGI("BODY POS: %f, %f", worldToBox2D(x), worldToBox2D(y));
 
 		b2PolygonShape shape;
-		shape.SetAsBox(worldToBox2D(width), worldToBox2D(height));
+		shape.SetAsBox(worldToBox2D(width / 2.0f), worldToBox2D(height / 2.0f));
 
 		LOGI("BODY SIZE: %f, %f", worldToBox2D(width / 2), worldToBox2D(height / 2));
 
@@ -262,13 +264,13 @@ struct Rectangle : public Shape
 	void draw()
 	{
 		GLfloat vertices[] {
-			0.0f, height,
-			width, height,
-			0.0f, 0.0f,
+			-width / 2.0f, height / 2.0f,
+			width / 2.0f, height / 2.0f,
+			-width / 2.0f, -height / 2.0f,
 
-			width, height,
-			width, 0.0f,
-			0.0f, 0.0f
+			width / 2.0f, height / 2.0f,
+			width / 2.0f, -height / 2.0f,
+			-width / 2.0f, -height / 2.0f
 		};
 
 		GLuint VBO;
@@ -277,9 +279,9 @@ struct Rectangle : public Shape
 
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-		glUseProgram(program);
-
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+
+		glUseProgram(program);
 
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
@@ -287,7 +289,7 @@ struct Rectangle : public Shape
 		glm::mat4 model = glm::translate(glm::vec3(box2DToWorld(body->GetPosition().x), box2DToWorld(body->GetPosition().y), 0.0f)) * glm::rotate(body->GetAngle(),
 			glm::vec3(0.0f, 0.0f, 1.0f));
 
-		glUniform4fv(glGetUniformLocation(program, "color"), 1, glm::value_ptr(glm::vec4(0.0f, 0.5f, 0.6f, 1.0f)));
+		glUniform4fv(glGetUniformLocation(program, "color"), 1, glm::value_ptr(color));
 		glUniformMatrix4fv(glGetUniformLocation(program, "MVP"), 1, GL_FALSE, glm::value_ptr(projection * model));
 		checkGlError("glVertexAttribPointer");
 
@@ -306,8 +308,6 @@ struct Rectangle : public Shape
 
 std::vector<Shape*> shapes;
 std::vector<b2Body*> walls;
-
-Rectangle* vittu;
 
 void clearWalls()
 {
@@ -393,8 +393,10 @@ float createShapes(int width, int height)
 
 	LOGI("POS: %f, %f", width / 2.0f, height / 2.0f);
 
-	shapes.push_back(new Rectangle(width / 2.0f, height / 2.0f, w, h, glm::vec4(0.0f, 0.0f, 0.8f, 1.0f), world, true));
+	shapes.push_back(new Rectangle(width / 2.0f, h, w, h * 2, glm::vec4(1.0f, 0.0f, 0.8f, 1.0f), world, true));
+	shapes.back()->setRotation(glm::radians(44.5f));
 
+	shapes.push_back(new Rectangle(width / 2.0f, height / 2.0f, w, h, glm::vec4(0.0f, 0.0f, 0.8f, 1.0f), world, true));
 	shapes.back()->setRotation(glm::radians(44.5f));
 }
 
@@ -404,6 +406,7 @@ float createShapes(int width, int height)
 
 void initGraphics(int width, int height)
 {
+
 	clearWalls();
 	clearShapes();
 
