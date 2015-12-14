@@ -195,7 +195,7 @@ GLuint createProgram(const char* vertexSource, const char* fragmentSource)
 
 struct Shape
 {
-	Shape(float x, float y, float width, float height, const glm::vec4& color, b2World& world) : color(color), x(x), y(y), width(width), height(height), model(1.0f), world(world)
+	Shape(GLfloat x, GLfloat y, GLfloat width, GLfloat height, const glm::vec4& color, b2World& world) : color(color), x(x), y(y), width(width), height(height), model(1.0f), world(world)
 	{
 	
 	}
@@ -225,22 +225,22 @@ protected:
 	glm::vec4 color;
 	b2World& world;
 	b2Body* body;
-	float x;
-	float y;
-	float width;
-	float height;
+	GLfloat x;
+	GLfloat y;
+	GLfloat width;
+	GLfloat height;
 };
 
 struct Triangle : public Shape
 {
-	Triangle(float x, float y, float width, float height, const glm::vec4& color, b2World &world, bool dynamic) : Shape(x, y, width, height, color, world)
+	Triangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height, const glm::vec4& color, b2World &world, bool dynamic) : Shape(x, y, width, height, color, world)
 	{
 	}
 };
 
 struct Rectangle : public Shape
 {
-	Rectangle(float x, float y, float width, float height, const glm::vec4& color, b2World &world, bool dynamic) : Shape(x, y, width, height, color, world)
+	Rectangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height, const glm::vec4& color, b2World &world, bool dynamic) : Shape(x, y, width, height, color, world)
 	{
 		b2BodyDef bodyDef;
 		bodyDef.position = worldToBox2D(x, y);
@@ -293,7 +293,7 @@ struct Rectangle : public Shape
 		glUniformMatrix4fv(glGetUniformLocation(program, "MVP"), 1, GL_FALSE, glm::value_ptr(projection * model));
 		checkGlError("glVertexAttribPointer");
 
-		glDrawArrays(GL_TRIANGLES, 0, 12);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 		checkGlError("glDrawArrays");
 
 		glDisableVertexAttribArray(0);
@@ -396,7 +396,7 @@ float createShapes(int width, int height)
 	shapes.push_back(new Rectangle(width / 2.0f, h, w, h * 2, glm::vec4(1.0f, 0.0f, 0.8f, 1.0f), world, true));
 	shapes.back()->setRotation(glm::radians(44.5f));
 
-	shapes.push_back(new Rectangle(width / 2.0f, height / 2.0f, w, h, glm::vec4(0.0f, 0.0f, 0.8f, 1.0f), world, true));
+	shapes.push_back(new Rectangle(width / 3.0f, height / 2.0f, w, h, glm::vec4(0.0f, 0.0f, 0.8f, 1.0f), world, true));
 	shapes.back()->setRotation(glm::radians(44.5f));
 }
 

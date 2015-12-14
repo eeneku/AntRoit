@@ -1089,5 +1089,6 @@
     <None Include="jni\glm\gtx\wrap.inl">
       <Filter>jni\glm</Filter>
     </None>
+    <None Include="wtf.png" />
   </ItemGroup>
 </Project>

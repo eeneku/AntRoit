@@ -445,6 +445,7 @@
     <None Include="jni\glm\gtx\vector_angle.inl" />
     <None Include="jni\glm\gtx\vector_query.inl" />
     <None Include="jni\glm\gtx\wrap.inl" />
+    <None Include="wtf.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
