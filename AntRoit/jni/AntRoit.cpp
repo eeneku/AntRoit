@@ -37,7 +37,7 @@
 
 #pragma region GL debug
 
-#define  LOG_TAG    "libgl2jni"
+#define  LOG_TAG    "AntRoit"
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
 
@@ -66,27 +66,32 @@ b2Vec2 worldToBox2D(float x, float y)
 	return b2Vec2(x / Scale, y / Scale);
 }
 
-b2Vec2 worldToBox2D(glm::vec2 vec) {
+b2Vec2 worldToBox2D(glm::vec2 vec) 
+{
 	vec.x /= Scale;
 	vec.y /= Scale;
 	return b2Vec2(vec.x, vec.y);
 }
 
-float worldToBox2D(float f) {
+float worldToBox2D(float f) 
+{
 	return f / Scale;
 }
 
-glm::vec2 box2DToWorld(float x, float y) {
+glm::vec2 box2DToWorld(float x, float y) 
+{
 	return glm::vec2(x * Scale, y * Scale);
 }
 
-glm::vec2 box2DToWorld(b2Vec2 vec) {
+glm::vec2 box2DToWorld(b2Vec2 vec) 
+{
 	vec.x *= Scale;
 	vec.y *= Scale;
 	return glm::vec2(vec.x, vec.y);
 }
 
-float box2DToWorld(float f) {
+float box2DToWorld(float f) 
+{
 	return f * Scale;
 }
 
@@ -153,21 +158,26 @@ GLuint loadShader(GLenum shaderType, const char* pSource)
 GLuint createProgram(const char* vertexSource, const char* fragmentSource) 
 {
 	GLuint vertexShader = loadShader(GL_VERTEX_SHADER, vertexSource);
+
 	if (!vertexShader) return 0;
 
-	GLuint pixelShader = loadShader(GL_FRAGMENT_SHADER, fragmentSource);
-	if (!pixelShader) return 0;
+	GLuint fragmentShader = loadShader(GL_FRAGMENT_SHADER, fragmentSource);
+
+	if (!fragmentShader) return 0;
 
 	GLuint program = glCreateProgram();
+
 	if (program) 
 	{
 		glAttachShader(program, vertexShader);
-		checkGlError("glAttachShader");
-		glAttachShader(program, pixelShader);
-		checkGlError("glAttachShader");
+		glAttachShader(program, fragmentShader);
+
 		glLinkProgram(program);
+
 		GLint linkStatus = GL_FALSE;
+
 		glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
+
 		if (linkStatus != GL_TRUE)
 		{
 			GLint bufLength = 0;
@@ -195,23 +205,42 @@ GLuint createProgram(const char* vertexSource, const char* fragmentSource)
 
 struct Shape
 {
-	Shape(GLfloat x, GLfloat y, GLfloat width, GLfloat height, const glm::vec4& color, b2World& world) : color(color), x(x), y(y), width(width), height(height), model(1.0f), world(world)
+	Shape(const glm::vec4& color, b2World& world) : 
+		color(color), 
+		model(1.0f), 
+		world(world), 
+		numVertices(0)
 	{
-	
+		glGenBuffers(1, &VBO);
 	}
 
 	~Shape()
 	{
 		world.DestroyBody(body);
 		body = nullptr;
+
+		glDeleteBuffers(1, &VBO);
 	}
 
-
-	virtual void draw() = 0;
-
-	void setRotation(float angle)
+	void draw()
 	{
-		body->SetTransform(worldToBox2D(x, y), angle);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+		glEnableVertexAttribArray(0);
+
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
+
+		glm::mat4 model = glm::translate(glm::vec3(box2DToWorld(body->GetPosition().x), box2DToWorld(body->GetPosition().y), 0.0f));
+		model *= glm::rotate(body->GetAngle(), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		glUniform4fv(glGetUniformLocation(program, "color"), 1, glm::value_ptr(color));
+		glUniformMatrix4fv(glGetUniformLocation(program, "MVP"), 1, GL_FALSE, glm::value_ptr(projection * model));
+
+		glDrawArrays(GL_TRIANGLES, 0, numVertices);
+
+		glDisableVertexAttribArray(0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
 	void setGravity(float gravity)
@@ -225,44 +254,72 @@ protected:
 	glm::vec4 color;
 	b2World& world;
 	b2Body* body;
-	GLfloat x;
-	GLfloat y;
-	GLfloat width;
-	GLfloat height;
+	GLuint VBO;
+	GLuint numVertices;
 };
 
 struct Triangle : public Shape
 {
-	Triangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height, const glm::vec4& color, b2World &world, bool dynamic) : Shape(x, y, width, height, color, world)
+	Triangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLfloat rotation, const glm::vec4& color, b2World &world, bool dynamic) : Shape(color, world)
 	{
+		b2BodyDef bodyDef;
+		bodyDef.position = worldToBox2D(x, y);;
+
+		bodyDef.type = dynamic ? b2_dynamicBody : b2_staticBody;
+		body = world.CreateBody(&bodyDef);
+
+		b2PolygonShape shape;
+		b2Vec2 shapetices[3];
+
+		shapetices[0].Set(-worldToBox2D(width / 2.0f), worldToBox2D(height / 2.0f));
+		shapetices[1].Set(worldToBox2D(width / 2.0f), worldToBox2D(height / 2.0f));
+		shapetices[2].Set(-worldToBox2D(width / 2.0f), -worldToBox2D(height / 2.0f));
+
+		shape.Set(shapetices, 3);
+
+		b2FixtureDef fixtureDef;
+		fixtureDef.friction = 1.0f;
+		fixtureDef.density = 1.0f;
+		fixtureDef.shape = &shape;
+
+		body->CreateFixture(&fixtureDef);
+
+		numVertices = 3;
+
+		GLfloat vertices[] = {
+			-width / 2.0f, height / 2.0f,
+			width / 2.0f, height / 2.0f,
+			-width / 2.0f, -height / 2.0f
+		};
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 };
 
 struct Rectangle : public Shape
 {
-	Rectangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height, const glm::vec4& color, b2World &world, bool dynamic) : Shape(x, y, width, height, color, world)
+	Rectangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLfloat rotation, const glm::vec4& color, b2World &world, bool dynamic) : Shape(color, world)
 	{
 		b2BodyDef bodyDef;
 		bodyDef.position = worldToBox2D(x, y);
 		bodyDef.type = dynamic ? b2_dynamicBody : b2_staticBody;
 		body = world.CreateBody(&bodyDef);
 
-		LOGI("BODY POS: %f, %f", worldToBox2D(x), worldToBox2D(y));
-
 		b2PolygonShape shape;
 		shape.SetAsBox(worldToBox2D(width / 2.0f), worldToBox2D(height / 2.0f));
-
-		LOGI("BODY SIZE: %f, %f", worldToBox2D(width / 2), worldToBox2D(height / 2));
 
 		b2FixtureDef fixtureDef;
 		fixtureDef.density = 1.0f;
 		fixtureDef.shape = &shape;
 
 		body->CreateFixture(&fixtureDef);
-	}
 
-	void draw()
-	{
+		numVertices = 6;
+
 		GLfloat vertices[] {
 			-width / 2.0f, height / 2.0f,
 			width / 2.0f, height / 2.0f,
@@ -273,36 +330,11 @@ struct Rectangle : public Shape
 			-width / 2.0f, -height / 2.0f
 		};
 
-		GLuint VBO;
-
-		glGenBuffers(1, &VBO);
-
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 
-		glUseProgram(program);
-
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
-
-		glm::mat4 model = glm::translate(glm::vec3(box2DToWorld(body->GetPosition().x), box2DToWorld(body->GetPosition().y), 0.0f)) * glm::rotate(body->GetAngle(),
-			glm::vec3(0.0f, 0.0f, 1.0f));
-
-		glUniform4fv(glGetUniformLocation(program, "color"), 1, glm::value_ptr(color));
-		glUniformMatrix4fv(glGetUniformLocation(program, "MVP"), 1, GL_FALSE, glm::value_ptr(projection * model));
-		checkGlError("glVertexAttribPointer");
-
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		checkGlError("glDrawArrays");
-
-		glDisableVertexAttribArray(0);
-
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-		glUseProgram(0);
-
-		glDeleteBuffers(1, &VBO);
 	}
 };
 
@@ -389,15 +421,8 @@ float createShapes(int width, int height)
 	float w = width / 5.0f;
 	float h = w;
 
-	LOGI("SIZE: %f, %f", w, h);
-
-	LOGI("POS: %f, %f", width / 2.0f, height / 2.0f);
-
-	shapes.push_back(new Rectangle(width / 2.0f, h, w, h * 2, glm::vec4(1.0f, 0.0f, 0.8f, 1.0f), world, true));
-	shapes.back()->setRotation(glm::radians(44.5f));
-
-	shapes.push_back(new Rectangle(width / 3.0f, height / 2.0f, w, h, glm::vec4(0.0f, 0.0f, 0.8f, 1.0f), world, true));
-	shapes.back()->setRotation(glm::radians(44.5f));
+	shapes.push_back(new Rectangle(width / 2.0f, h, w, h * 2, glm::radians(44.5f), glm::vec4(1.0f, 0.0f, 0.8f, 1.0f), world, true));
+	shapes.push_back(new Rectangle(width / 3.0f, height / 2.0f, w, h, glm::radians(44.5f), glm::vec4(0.0f, 0.0f, 0.8f, 1.0f), world, true));
 }
 
 #pragma endregion
@@ -406,7 +431,6 @@ float createShapes(int width, int height)
 
 void initGraphics(int width, int height)
 {
-
 	clearWalls();
 	clearShapes();
 
@@ -425,10 +449,7 @@ void initGraphics(int width, int height)
 	}
 
 	glViewport(0, 0, width, height);
-	checkGlError("glViewport");
-
 	glClearColor(0.7f, 0.3f, 0.1f, 1.0f);
-	checkGlError("glClearColor");
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
@@ -450,7 +471,6 @@ float step = 1.0f / 60.0f;
 
 void update(int time)
 {
-
 	float newTime = time / 1000.0f;
 
 	float deltaTime = std::min(newTime - currentTime, 0.25f);
@@ -473,15 +493,15 @@ void update(int time)
 void draw()
 {
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-	checkGlError("glClear");
 
 	glUseProgram(program);
-	checkGlError("glUseProgram");
 
 	for (auto shape : shapes)
 	{
 		shape->draw();
 	}
+
+	glUseProgram(0);
 }
 
 #pragma endregion
