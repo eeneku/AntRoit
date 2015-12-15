@@ -26,12 +26,12 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include <random>
-
 #include <vector>
 #include <glm\glm.hpp>
 #include <glm\gtc\type_ptr.hpp>
 #include <glm\gtx\transform.hpp>
+
+#include <random>
 
 #include <Box2D\Box2D.h>
 
@@ -40,6 +40,7 @@
 #define  LOG_TAG    "AntRoit"
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
+#define randomFloat std::uniform_real_distribution<float>
 
 static void printGLString(const char *name, GLenum s) 
 {
@@ -98,7 +99,6 @@ float box2DToWorld(float f)
 GLuint program;
 glm::mat4 projection;
 b2World world(b2Vec2(0.0f, worldToBox2D(128.0f)));
-
 
 #pragma endregion
 
@@ -284,12 +284,14 @@ struct Triangle : public Shape
 
 		body->CreateFixture(&fixtureDef);
 
+		body->SetTransform(body->GetPosition(), rotation);
+
 		numVertices = 3;
 
 		GLfloat vertices[] = {
 			-width / 2.0f, height / 2.0f,
 			width / 2.0f, height / 2.0f,
-			-width / 2.0f, -height / 2.0f
+			-width / 2.0f, -height / 2.0f,
 		};
 
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -318,6 +320,8 @@ struct Rectangle : public Shape
 
 		body->CreateFixture(&fixtureDef);
 
+		body->SetTransform(body->GetPosition(), rotation);
+
 		numVertices = 6;
 
 		GLfloat vertices[] {
@@ -339,16 +343,32 @@ struct Rectangle : public Shape
 };
 
 std::vector<Shape*> shapes;
-std::vector<b2Body*> walls;
+int screenWidth = 0;
+int screenHeight = 0;
+int tWidth = 0;
+int tHeight = 0;
 
-void clearWalls()
+
+
+void createShape()
 {
-	for (auto wall : walls)
-	{
-		world.DestroyBody(wall);
-	}
+	std::random_device device;
+	std::default_random_engine generator(device());
 
-	walls.clear();
+	float w = randomFloat(tWidth / 10.0f, tWidth)(generator);
+	float h = randomFloat(tHeight / 10.0f, tHeight)(generator);
+	float x = randomFloat(tWidth / 8.0f + w, screenWidth - tWidth / 4.0f - w)(generator);
+	float y = randomFloat(tHeight / 8.0f + h, screenHeight - tHeight / 4.0f - h)(generator);
+	float r = randomFloat(0.0f, 1.0f)(generator);
+	float g = randomFloat(0.0f, 1.0f)(generator);
+	float b = randomFloat(0.0f, 1.0f)(generator);
+	float a = randomFloat(0.0f, 1.0f)(generator);
+	float angle = randomFloat(0.0f, 360.0f)(generator);
+
+	if(randomFloat(0.0f, 1.0f)(generator) > 0.49f)
+		shapes.push_back(new Triangle(x, y, w, h, glm::radians(angle), glm::vec4(r, g, b, a), world, true));
+	else
+		shapes.push_back(new Rectangle(x, y, w, h, glm::radians(angle), glm::vec4(r, g, b, a), world, true));
 }
 
 void clearShapes()
@@ -361,68 +381,22 @@ void clearShapes()
 	shapes.clear();
 }
 
-float createWall(float x, float y, float width, float height)
-{
-	b2Body* body;
-	b2BodyDef bodyDef;
-	bodyDef.position = worldToBox2D(x, y);;
-	bodyDef.type = b2_staticBody;
-	body = world.CreateBody(&bodyDef);
-
-	b2PolygonShape shape;
-	shape.SetAsBox(worldToBox2D(width), worldToBox2D(height));
-
-	b2FixtureDef fixtureDef;
-	fixtureDef.shape = &shape;
-
-	body->CreateFixture(&fixtureDef);
-
-	walls.push_back(body);
-}
-
-float createWalls(int width, int height)
-{
-	// Top
-	createWall(0.0f, -5.0f, width, 10.0f);
-
-	// Bottom
-	createWall(0.0f, height + 5.0f, width, 10.0f);
-
-	// Left
-	createWall(-5.0f, 0.0f, 10.0f, height);
-
-	// Right
-	createWall(width + 5.0f, 0.0f, 10.0f, height);
-}
-
 float createShapes(int width, int height)
 {
-	//shapes.push_back(new Rectangle(150.0f, 50.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, true));
-	//shapes.push_back(new Rectangle(450.0f, 50.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, true));
-	//shapes.push_back(new Rectangle(750.0f, 50.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, true));
-	/*shapes.push_back(new Triangle(width / 2.0f, 50.0f, 100.0f, 100.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, true));
+	tWidth = (width > height) ? height / 5.0f : width / 5.0f;
+	tHeight = tWidth;
 
-	shapes.push_back(new Rectangle(800.0f, 200.0f, 800.0f, 50.0f, glm::vec4(1.0f, 1.0f, 0.0f, 0.8f), world, false));
-	shapes.back()->setRotation(glm::radians(-35.0f));
+	// Borders
+	shapes.push_back(new Rectangle(width / 2.0f, tHeight / 8.0f, width, tHeight / 4.0f, glm::radians(0.0f), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, false));
+	shapes.push_back(new Rectangle(width / 2.0f, height - tHeight / 8.0f, width, tHeight / 4.0f, glm::radians(0.0f), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, false));
+	shapes.push_back(new Rectangle(tWidth / 8.0f, height / 2.0f, tWidth / 4.0f, height, glm::radians(0.0f), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, false));
+	shapes.push_back(new Rectangle(width - tWidth / 8.0f, height / 2.0f, tWidth / 4.0f, height, glm::radians(0.0f), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), world, false));
 
-	shapes.push_back(new Rectangle(width / 2.0f, height / 2.0f, 100.0f, 100.0f, glm::vec4(0.0f, 0.0f, 0.0f, 0.8f), world, true));
+	//shapes.push_back(new Triangle(width / 1.5f, tHeight / 2.0f, tWidth / 1.5f, tHeight * 2.0f, glm::radians(44.5f), glm::vec4(0.0f, 0.6f, 0.1f, 1.0f), world, true));
+	//shapes.push_back(new Rectangle(0, height / 2.0f, tWidth * 4.0f, tHeight / 5.0f, glm::radians(15.0f), glm::vec4(0.0f, 0.4f, 0.2f, 1.0f), world, false));
 
-	shapes.push_back(new Rectangle(200.0f, 450.0f, 800.0f, 50.0f, glm::vec4(1.0f, 0.0f, 1.0f, 0.4f), world, false));
-	shapes.back()->setRotation(glm::radians(50.0f));
-
-	shapes.push_back(new Rectangle(800.0f, 1000.0f, 800.0f, 50.0f, glm::vec4(0.0f, 1.0f, 1.0f, 0.3f), world, false));
-	shapes.back()->setRotation(glm::radians(-15.0f));
-
-	shapes.push_back(new Triangle(300.0f, height - 200.0f, 600.0f, 400.0f, glm::vec4(0.0f, 0.0f, 1.0f, 0.7f), world, false));
-
-	shapes.push_back(new Triangle(width - 50.0f, height - 200.0f, 200.0f, 400.0f, glm::vec4(1.0f, 0.0f, 1.0f, 0.7f), world, false));
-	shapes.back()->setRotation(glm::radians(-90.0f));*/
-
-	float w = width / 5.0f;
-	float h = w;
-
-	shapes.push_back(new Rectangle(width / 2.0f, h, w, h * 2, glm::radians(44.5f), glm::vec4(1.0f, 0.0f, 0.8f, 1.0f), world, true));
-	shapes.push_back(new Rectangle(width / 3.0f, height / 2.0f, w, h, glm::radians(44.5f), glm::vec4(0.0f, 0.0f, 0.8f, 1.0f), world, true));
+	//shapes.push_back(new Rectangle(width / 2.0f, tHeight, tWidth / 4.0f, tHeight, glm::radians(44.5f), glm::vec4(1.0f, 0.0f, 0.8f, 1.0f), world, true));
+	//shapes.push_back(new Rectangle(width / 3.0f, height / 2.0f, tWidth / 3.0f, tHeight / 3.0f, glm::radians(44.5f), glm::vec4(0.7f, 0.8f, 0.8f, 1.0f), world, true));
 }
 
 #pragma endregion
@@ -431,8 +405,10 @@ float createShapes(int width, int height)
 
 void initGraphics(int width, int height)
 {
-	clearWalls();
 	clearShapes();
+
+	screenWidth = width;
+	screenHeight = height;
 
 	printGLString("Version", GL_VERSION);
 	printGLString("Vendor", GL_VENDOR);
@@ -449,7 +425,7 @@ void initGraphics(int width, int height)
 	}
 
 	glViewport(0, 0, width, height);
-	glClearColor(0.7f, 0.3f, 0.1f, 1.0f);
+	glClearColor(0.1f, 0.1f, 0.8f, 1.0f);
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
@@ -457,7 +433,6 @@ void initGraphics(int width, int height)
 
 	projection = glm::ortho(0.0f, static_cast<float>(width), static_cast<float>(height), 0.0f);
 
-	createWalls(width, height);
 	createShapes(width, height);
 }
 
@@ -468,6 +443,7 @@ void initGraphics(int width, int height)
 float currentTime = 0.0f;
 float accumulator = 0.0f;
 float step = 1.0f / 60.0f;
+float spawnTime = 0.0f;
 
 void update(int time)
 {
@@ -483,6 +459,13 @@ void update(int time)
 		world.Step(step, 8, 3);
 
 		accumulator -= step;
+
+		if (newTime - spawnTime > 2.0f)
+		{
+			createShape();
+
+			spawnTime = newTime;
+		}
 	}
 }
 
