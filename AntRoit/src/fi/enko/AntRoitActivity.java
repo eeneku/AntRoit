@@ -20,6 +20,8 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
+import android.view.MotionEvent;
+import android.widget.Toast;
 
 import java.io.File;
 
@@ -47,5 +49,14 @@ public class AntRoitActivity extends Activity
 	{
 		super.onResume();
 		view.onResume();
+	}
+
+	@Override
+	public boolean onTouchEvent(MotionEvent event)
+	{
+
+		AntRoitLib.touch(event.getX(), event.getY());
+
+		return true;
 	}
 }

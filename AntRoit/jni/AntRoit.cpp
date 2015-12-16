@@ -109,7 +109,7 @@ static const char vertexShader[] =
 "uniform mat4 MVP;\n"
 "void main()\n"
 "{\n"
-"	gl_Position = MVP * vec4(position, 0.0f, 1.0f);\n"
+"	gl_Position = MVP * vec4(position, 0.0, 1.0);\n"
 "}\n";
 
 static const char fragmentShader[] =
@@ -347,16 +347,13 @@ int screenWidth = 0;
 int screenHeight = 0;
 int tWidth = 0;
 int tHeight = 0;
-
-
+std::random_device device;
+std::default_random_engine generator(device());
 
 void createShape()
 {
-	std::random_device device;
-	std::default_random_engine generator(device());
-
-	float w = randomFloat(tWidth / 10.0f, tWidth)(generator);
-	float h = randomFloat(tHeight / 10.0f, tHeight)(generator);
+	float w = randomFloat(tWidth / 5.0f, tWidth)(generator);
+	float h = randomFloat(tHeight / 5.0f, tHeight)(generator);
 	float x = randomFloat(tWidth / 8.0f + w, screenWidth - tWidth / 4.0f - w)(generator);
 	float y = randomFloat(tHeight / 8.0f + h, screenHeight - tHeight / 4.0f - h)(generator);
 	float r = randomFloat(0.0f, 1.0f)(generator);
@@ -444,6 +441,10 @@ float currentTime = 0.0f;
 float accumulator = 0.0f;
 float step = 1.0f / 60.0f;
 float spawnTime = 0.0f;
+float backgroundFun = 0.0f;
+float clearR = 0.2f;
+float clearG = 0.3f;
+float clearB = 0.5f;
 
 void update(int time)
 {
@@ -456,6 +457,16 @@ void update(int time)
 
 	while (accumulator >= step)
 	{
+		clearR += randomFloat(-0.001f, 0.001f)(generator);
+		clearG += randomFloat(-0.001f, 0.001f)(generator);
+		clearB += randomFloat(-0.001f, 0.001f)(generator);
+
+		if (clearR > 1.0f) clearR = 1.0f; else if (clearR < 0.0f) clearR = 0.0f;
+		if (clearG > 1.0f) clearG = 1.0f; else if (clearG < 0.0f) clearG = 0.0f;
+		if (clearB > 1.0f) clearB = 1.0f; else if (clearB < 0.0f) clearB = 0.0f;
+
+		glClearColor(clearR, clearG, clearB, 1.0f);
+
 		world.Step(step, 8, 3);
 
 		accumulator -= step;
@@ -467,6 +478,29 @@ void update(int time)
 			spawnTime = newTime;
 		}
 	}
+}
+
+#pragma endregion
+
+#pragma region Touch
+
+void touch(float x, float y)
+{
+	LOGI("PLS NO TOUCH :D %f, %f\n", x, y);
+
+	//float w = randomFloat(tWidth / 5.0f, tWidth)(generator);
+	//float h = randomFloat(tHeight / 5.0f, tHeight)(generator);
+
+	//float r = randomFloat(0.0f, 1.0f)(generator);
+	//float g = randomFloat(0.0f, 1.0f)(generator);
+	//float b = randomFloat(0.0f, 1.0f)(generator);
+	//float a = randomFloat(0.0f, 1.0f)(generator);
+	//float angle = randomFloat(0.0f, 360.0f)(generator);
+
+	//if (randomFloat(0.0f, 1.0f)(generator) > 0.49f)
+	//	shapes.push_back(new Triangle(x, y, w, h, glm::radians(angle), glm::vec4(r, g, b, a), world, true));
+	//else
+	//	shapes.push_back(new Rectangle(x, y, w, h, glm::radians(angle), glm::vec4(r, g, b, a), world, true));
 }
 
 #pragma endregion
@@ -502,6 +536,11 @@ extern "C"
 	{
 		update(time);
 		draw();
+	}
+
+	JNIEXPORT void JNICALL Java_fi_enko_antroit_AntRoitLib_touch(JNIEnv* env, jobject obj, jfloat x, jfloat y)
+	{
+		touch(x, y);
 	}
 }
 

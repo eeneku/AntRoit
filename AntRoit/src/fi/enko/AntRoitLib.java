@@ -30,4 +30,5 @@ public class AntRoitLib {
      */
      public static native void init(int width, int height);
      public static native void step(long time);
+	 public static native void touch(float x, float y);
 }
