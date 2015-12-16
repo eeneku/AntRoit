@@ -50,13 +50,4 @@ public class AntRoitActivity extends Activity
 		super.onResume();
 		view.onResume();
 	}
-
-	@Override
-	public boolean onTouchEvent(MotionEvent event)
-	{
-
-		AntRoitLib.touch(event.getX(), event.getY());
-
-		return true;
-	}
 }

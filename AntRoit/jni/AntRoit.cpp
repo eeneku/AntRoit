@@ -457,9 +457,9 @@ void update(int time)
 
 	while (accumulator >= step)
 	{
-		clearR += randomFloat(-0.001f, 0.001f)(generator);
-		clearG += randomFloat(-0.001f, 0.001f)(generator);
-		clearB += randomFloat(-0.001f, 0.001f)(generator);
+		clearR += randomFloat(-0.01f, 0.01f)(generator);
+		clearG += randomFloat(-0.01f, 0.01f)(generator);
+		clearB += randomFloat(-0.01f, 0.01f)(generator);
 
 		if (clearR > 1.0f) clearR = 1.0f; else if (clearR < 0.0f) clearR = 0.0f;
 		if (clearG > 1.0f) clearG = 1.0f; else if (clearG < 0.0f) clearG = 0.0f;
@@ -488,19 +488,24 @@ void touch(float x, float y)
 {
 	LOGI("PLS NO TOUCH :D %f, %f\n", x, y);
 
+	// Sori remes yritin mutta en osannu :(
 	//float w = randomFloat(tWidth / 5.0f, tWidth)(generator);
 	//float h = randomFloat(tHeight / 5.0f, tHeight)(generator);
 
-	//float r = randomFloat(0.0f, 1.0f)(generator);
-	//float g = randomFloat(0.0f, 1.0f)(generator);
-	//float b = randomFloat(0.0f, 1.0f)(generator);
-	//float a = randomFloat(0.0f, 1.0f)(generator);
-	//float angle = randomFloat(0.0f, 360.0f)(generator);
+	//if (x > tWidth / 8.0f + w && x < screenWidth - tWidth / 4.0f - w &&
+	//	y > tHeight / 8.0f + h && y < screenHeight - tHeight / 4.0f - h)
+	//{
+	//	float r = randomFloat(0.0f, 1.0f)(generator);
+	//	float g = randomFloat(0.0f, 1.0f)(generator);
+	//	float b = randomFloat(0.0f, 1.0f)(generator);
+	//	float a = randomFloat(0.0f, 1.0f)(generator);
+	//	float angle = randomFloat(0.0f, 360.0f)(generator);
 
-	//if (randomFloat(0.0f, 1.0f)(generator) > 0.49f)
-	//	shapes.push_back(new Triangle(x, y, w, h, glm::radians(angle), glm::vec4(r, g, b, a), world, true));
-	//else
-	//	shapes.push_back(new Rectangle(x, y, w, h, glm::radians(angle), glm::vec4(r, g, b, a), world, true));
+	//	if (randomFloat(0.0f, 1.0f)(generator) > 0.49f)
+	//		shapes.push_back(new Triangle(x, y, w, h, glm::radians(angle), glm::vec4(r, g, b, a), world, true));
+	//	else
+	//		shapes.push_back(new Rectangle(x, y, w, h, glm::radians(angle), glm::vec4(r, g, b, a), world, true));
+	//}
 }
 
 #pragma endregion

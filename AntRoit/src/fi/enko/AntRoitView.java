@@ -81,7 +81,6 @@ class AntRoitView extends GLSurfaceView {
     }
 
     private void init(boolean translucent, int depth, int stencil) {
-
         /* By default, GLSurfaceView() creates a RGB_565 opaque surface.
          * If we want a translucent one, we should change the surface's
          * format here, using PixelFormat.TRANSLUCENT for GL Surfaces
@@ -131,6 +130,17 @@ class AntRoitView extends GLSurfaceView {
             Log.e(TAG, String.format("%s: EGL error: 0x%x", prompt, error));
         }
     }
+
+	
+	@Override
+	public boolean onTouchEvent(MotionEvent event)
+	{
+		if(event.getAction() == 1)
+		{
+			AntRoitLib.touch(event.getX(), event.getY());
+		}
+		return true;
+	}
 
     private static class ConfigChooser implements GLSurfaceView.EGLConfigChooser {
 
